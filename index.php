@@ -1,5 +1,5 @@
 <?php
-
+require 'Person.php';
 
 class getApi
 {
@@ -19,7 +19,7 @@ class getApi
     const ASSOC_TOURS_URL = 'api/associations/champs';
     const USER_ASSOC_URL = 'api/associate';
     const EVENT_URL = 'api/events/';
-    const PLAYER_URL = 'api/person/';
+    const PLAYER_URL = 'api/persons/';
     const PLAYER_STAT_URL = 'api/person/';
     const SEASONS_STAT_URL = 'api/seasons/';
     const USER_TOURN_LIST = 'api/mychamps';
@@ -42,12 +42,12 @@ class getApi
         $new = [];
         foreach ($params as $name => $value) {
             $new[] = $name . $value;
-
         }
         $str = implode($new, "&");
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_HEADER, false);
         curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_POSTFIELDS, $str);
         curl_setopt($ch, CURLOPT_URL, "http://www.goalstream.org:8015/" . $url);
         $obj = json_decode(curl_exec($ch), true);
@@ -297,7 +297,16 @@ class getApi
     public function infoPlayer($id) // Запрос данных об игроке.
     {
         $params = [];
-        $this->postRequest($params, self::PLAYER_URL . $id);
+        $response = $this->postRequest($params, self::PLAYER_URL . $id);
+        $person = new Person();
+        $person->setFoto($response['person']['foto_url']);
+        $person->setName($response['person']['name']);
+        $person->setDay($response['person']['born']['day']);
+        $person->setMonth($response['person']['born']['month']);
+        $person->setYear($response['person']['born']['year']);
+        $person->setAlias($response['person']['alias']);
+        $person->setCurrentCareerClubs($response['person']['current_career_clubs']['0']);
+        return $person;
     }
 
     public function playerStat($id) //Запрос статистических данных об игроке
@@ -346,7 +355,8 @@ class getApi
 }
 
 $list = new getApi();
-
-$list->administratedMatches();
+//$list -> getAssocList();
+$person = new Person();
+$person = $list->infoPlayer(10190242);
+var_dump($person);
 ?>
-
